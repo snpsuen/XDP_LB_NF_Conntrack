@@ -16,8 +16,6 @@
 #include <linux/net_namespace.h>
 #include <net/netfilter/nf_conntrack_bpf.h>
 #include <net/netfilter/nf_conntrack_core.h>
-#include "nf_conntrack_bpf_helpers.h"
-
 
 enum {
 	NF_BPF_CT_OPTS_SZ = 12,
