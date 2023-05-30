@@ -3,7 +3,6 @@
 #include "nf_nat_bpf.h"
 
 #define IP_ADDRESS(x) (unsigned int)(172 + (17 << 8) + (0 << 16) + (x << 24))
-
 #define BACKEND_A 2
 #define BACKEND_B 3
 #define LB 4
@@ -11,11 +10,10 @@
 
 SEC("xdp_ctlb")
 int xdp_ctload_balancer(struct xdp_md *ctx) {
-	void* data = (void*)(long)ctx->data;
+    void* data = (void*)(long)ctx->data;
     void* data_end = (void*)(long)ctx->data_end;
-
+	
     bpf_printk("got something");
-
     struct ethhdr* eth = data;
     if ((void*)eth + sizeof(struct ethhdr) > data_end)
         return XDP_ABORTED;
@@ -32,42 +30,38 @@ int xdp_ctload_balancer(struct xdp_md *ctx) {
 
     bpf_printk("Got TCP packet from %x", iph->saddr);
 	
-	struct tcphdr* tcph = iph + sizeof(struct iphdr);
+    struct tcphdr* tcph = iph + sizeof(struct iphdr);
     if ((void*)tcph + sizeof(struct tcphdr) > data_end)
         return XDP_ABORTED;
 	
-	struct bpf_sock_tuple bpf_tuple = {};
+    struct bpf_sock_tuple bpf_tuple = {};
     struct bpf_ct_opts opts_def = {
 	    .netns_id = -1,
-	};
+    };
     struct nf_conn* ct;
 	
-	opts_def.l4proto = iph->protocol;
+    opts_def.l4proto = iph->protocol;
     bpf_tuple.ipv4.saddr = iph->saddr;
     bpf_tuple.ipv4.daddr = iph->daddr;
-	bpf_tuple.ipv4.sport = tcph->source;
+    bpf_tuple.ipv4.sport = tcph->source;
     bpf_tuple.ipv4.dport = tcph->dest;
 	
-	if (bpf_tuple.ipv4.dport != bpf_ntohs(LBPORT)) || (bpf_tuple.ipv4.daddr != IP_ADDRESS(LB)) {
+    if (bpf_tuple.ipv4.dport != bpf_ntohs(LBPORT)) || (bpf_tuple.ipv4.daddr != IP_ADDRESS(LB))
         return XDP_PASS;
-    }
 	
-	ct = bpf_xdp_ct_lookup(ctx, &bpf_tuple, sizeof(bpf_tuple.ipv4), &opts_def, sizeof(opts_def));
+    ct = bpf_xdp_ct_lookup(ctx, &bpf_tuple, sizeof(bpf_tuple.ipv4), &opts_def, sizeof(opts_def));
     if (ct) {
         bpf_printk("CT lookup (ct found) 0x%X\n", ct)
-        bpf_printk("Timeout %u  status 0x%X  daddr %pI4  dport 0x%X  \n", ct->timeout, ct->status, &(bpf_tuple.ipv4.daddr), bpf_tuple.ipv4.dport)
-        
-		if (iph->protocol == IPPROTO_TCP) {
-		    bpf_printk("TCP proto state %u flags  %u/ %u  last_dir  %u  \n", ct->proto.tcp.state, ct->proto.tcp.seen[0].flags, ct->proto.tcp.seen[1].flags, ct->proto.tcp.last_dir)
-		}
+        bpf_printk("Timeout %u  status 0x%X  daddr %pI4  dport 0x%X  \n", ct->timeout, ct->status, &(bpf_tuple.ipv4.daddr), bpf_tuple.ipv4.dport);
+	if (iph->protocol == IPPROTO_TCP)
+            bpf_printk("TCP proto state %u flags  %u/ %u  last_dir  %u  \n", ct->proto.tcp.state, ct->proto.tcp.seen[0].flags, ct->proto.tcp.seen[1].flags, ct->proto.tcp.last_dir);
         bpf_ct_release(ct);
-    } 
-	else {
-		bpf_printk("CT lookup (no entry) 0x%X\n", 0)
+    else {
+        bpf_printk("CT lookup (no entry) 0x%X\n", 0)
         bpf_printk("dport 0x%X 0x%X\n", bpf_tuple.ipv4.dport, bpf_htons(LBPORT))
         bpf_printk("Got IP packet: dest: %pI4, protocol: %u", &(iph->daddr), iph->protocol)
                     
-	    /* Create a new CT entry */
+	/* Create a new CT entry */
 
         struct nf_conn *nct = bpf_xdp_ct_alloc(ctx, &bpf_tuple, sizeof(bpf_tuple.ipv4), &opts_def, sizeof(opts_def));
         if (!nct) {
