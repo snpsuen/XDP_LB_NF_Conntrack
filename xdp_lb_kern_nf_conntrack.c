@@ -53,37 +53,35 @@ int xdp_ctload_balancer(struct xdp_md *ctx) {
     if (ct) {
         bpf_printk("CT lookup (ct found) 0x%X\n", ct)
         bpf_printk("Timeout %u  status 0x%X  daddr %pI4  dport 0x%X  \n", ct->timeout, ct->status, &(bpf_tuple.ipv4.daddr), bpf_tuple.ipv4.dport);
-	if (iph->protocol == IPPROTO_TCP)
-            bpf_printk("TCP proto state %u flags  %u/ %u  last_dir  %u  \n", ct->proto.tcp.state, ct->proto.tcp.seen[0].flags, ct->proto.tcp.seen[1].flags, ct->proto.tcp.last_dir);
+        bpf_printk("TCP proto state %u flags  %u/ %u  last_dir  %u  \n", ct->proto.tcp.state, ct->proto.tcp.seen[0].flags, ct->proto.tcp.seen[1].flags, ct->proto.tcp.last_dir);
         bpf_ct_release(ct);
+    }
     else {
         bpf_printk("CT lookup (no entry) 0x%X\n", 0)
         bpf_printk("dport 0x%X 0x%X\n", bpf_tuple.ipv4.dport, bpf_htons(LBPORT))
         bpf_printk("Got IP packet: dest: %pI4, protocol: %u", &(iph->daddr), iph->protocol)
                     
 	/* Create a new CT entry */
-
         struct nf_conn *nct = bpf_xdp_ct_alloc(ctx, &bpf_tuple, sizeof(bpf_tuple.ipv4), &opts_def, sizeof(opts_def));
         if (!nct) {
-			bpf_printk("bpf_xdp_ct_alloc() failed\n");
+	    bpf_printk("bpf_xdp_ct_alloc() failed\n");
             return XDP_ABORTED;
         }
 		
-		char be = BACKEND_A
-		int random;
-		get_random_bytes(&random, sizeof(random));
-		if (random % 2)
+        char be = BACKEND_A
+	int random;
+	get_random_bytes(&random, sizeof(random));
+	if (random % 2)
             be = BACKEND_B;
-		
-		union nf_inet_addr addr = {};
-		addr.ip = IP_ADDRESS(be)
+	    
+	union nf_inet_addr addr = {};
+	addr.ip = IP_ADDRESS(be)
 
         /* Add DNAT info */
         bpf_ct_set_nat_info(nct, &addr, bpf_tuple.ipv4.dport, NF_NAT_MANIP_DST);
 
         /* Now add SNAT (masquerade) info */
         /* For now using the LB IP, check this TODO */
-
         addr.ip = bpf_tuple.ipv4.daddr;
         bpf_ct_set_nat_info(nct, &addr, -1, NF_NAT_MANIP_SRC);
 
@@ -95,9 +93,8 @@ int xdp_ctload_balancer(struct xdp_md *ctx) {
         if (ct)
           bpf_ct_release(ct);
 	  
-    }
-	
-	return XDP_PASS
+    }	
+    return XDP_PASS
 }
 
 char _license[] SEC("license") = "GPL";
