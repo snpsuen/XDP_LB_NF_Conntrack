@@ -11,7 +11,6 @@
 #include <net/netfilter/nf_conntrack_bpf.h>
 #include <net/netfilter/nf_conntrack_core.h>
 #include <net/netfilter/nf_nat.h>
-#include "nf_bat_bpf.h"
 
 __diag_push();
 __diag_ignore_all("-Wmissing-prototypes",
