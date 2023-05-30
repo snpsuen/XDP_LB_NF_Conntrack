@@ -1,10 +1,7 @@
-# TARGET = xdp_lb
-# TARGET = packetdrop
-TARGET = xdp_liz
+TARGET = xdp_lb_kern_nf_conntrack
 
 # For xdp_liz, make and also make user. The others don't have userspace programs
 
-USER_TARGET = ${TARGET:=_user}
 BPF_TARGET = ${TARGET:=_kern}
 BPF_C = ${BPF_TARGET:=.c}
 BPF_OBJ = ${BPF_C:.c=.o}
