@@ -1,6 +1,6 @@
 #include <linux/random.h>
-#include "nf_conntrack_bpf_helpers.h"
-#include "nf_nat_bpf.h"
+#include "bpf_nf_ct.h"
+#include "bpf_nf_nat.h"
 
 #define IP_ADDRESS(x) (unsigned int)(172 + (17 << 8) + (0 << 16) + (x << 24))
 #define BACKEND_A 2
