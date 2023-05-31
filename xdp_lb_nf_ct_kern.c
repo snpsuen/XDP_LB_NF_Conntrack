@@ -6,6 +6,7 @@
 #define BACKEND_A 2
 #define BACKEND_B 3
 #define LB 4
+#define CLIENT 5
 #define LBPORT 80
 
 SEC("xdp_ctlb")
