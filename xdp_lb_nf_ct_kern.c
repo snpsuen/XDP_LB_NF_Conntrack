@@ -5,8 +5,8 @@
 #define IP_ADDRESS(x) (unsigned int)(172 + (17 << 8) + (0 << 16) + (x << 24))
 #define BACKEND_A 2
 #define BACKEND_B 3
-#define LB 4
-#define CLIENT 5
+#define CLIENT 4
+#define LB 5
 #define LBPORT 80
 
 SEC("xdp_ctlb")
