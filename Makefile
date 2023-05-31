@@ -1,18 +1,10 @@
-TARGET = xdp_lb_nf_ct
-CT_TARGET = bpf_nf_ct
-NAT_TARGET = bpf_nf_nat
+TARGET = xdp_lb
 
-BPF_TARGET = ${TARGET:=_kern}
+BPF_TARGET = ${TARGET:=_nf_ct_kern}
 BPF_C = ${BPF_TARGET:=.c}
 BPF_OBJ = ${BPF_C:.c=.o}
 
-CT_C = ${CT_TARGET:=.c}
-CT_OBJ = ${CT_C:.c=.o}
-
-NAT_C = ${NAT_TARGET:=.c}
-NAT_OBJ = ${NAT_C:.c=.o}
-
-xdp: $(BPF_OBJ) $(CT_OBJ) $(NAT_OBJ)
+xdp: $(BPF_OBJ)
 	bpftool net detach xdpgeneric dev eth0
 	rm -f /sys/fs/bpf/$(TARGET)
 	bpftool prog load $(BPF_OBJ) /sys/fs/bpf/$(TARGET)
