@@ -26,7 +26,7 @@ struct bpf_map_def SEC("maps") return_traffic = {
 struct bpf_map_def SEC("maps") forward_flow = {
 	.type        = BPF_MAP_TYPE_HASH,
 	.key_size    = sizeof(struct five_tuple),
-	.value_size  = sizeof(__u32),
+	.value_size  = sizeof(__u8),
 	.max_entries = 100000,
 	.map_flags   = BPF_F_NO_PREALLOC,
 };
@@ -36,7 +36,8 @@ int xdp_load_balancer(struct xdp_md *ctx)
 {
     void *data = (void *)(long)ctx->data;
     void *data_end = (void *)(long)ctx->data_end;
-    struct five_tuple key_five_tuple = {};
+    struct five_tuple forward_key = {};
+    __u16 return_key;
 
     bpf_printk("got something");
     struct ethhdr* eth = data;
@@ -58,16 +59,42 @@ int xdp_load_balancer(struct xdp_md *ctx)
     struct tcphdr* tcph = iph + sizeof(struct iphdr);
     if ((void*)tcph + sizeof(struct tcphdr) > data_end)
         return XDP_ABORTED;
-    
-    key_five_tuple.protocol = iph->protocol;
-    key_five_tuple.ip_source = iph->saddr;
-    key_five_tuple.ip_destination = iph->saddr;
-    key_five_tuple.port_source = tcph->source;
-    key_five_tuple.port_destination = tcph->dest;
 	
     bpf_printk("Got TCP packet from %x", iph->saddr);
-    if (iph->saddr == IP_ADDRESS())
-    {
+    if (iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B)) {
+        return_key = tcph->dest;
+	__u32* return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
+	if (return_addr == NULL)
+	    bpf_printk("Cannot locate a return path for the destination port %hu", return_key);
+	    return XDP_ABORTED;
+	}
+	
+	iph->daddr = *return_addr;
+	iph->saddr = IP_ADDRESS(LB);
+	iph->check = iph_csum(iph);
+        return XDP_PASS;
+    }
+    else {
+        forward_key.protocol = iph->protocol;
+        forward_key.ip_source = iph->saddr;
+        forward_key.ip_destination = iph->saddr;
+        forward_key.port_source = tcph->source;
+        forward_key.port_destination = tcph->dest;
+	    
+	__u8* forward_backend = bpf_map_lookup_elem(&forward_flow, &forward_key);
+	if (forward_backend == NULL) {
+	    
+	
+	    
+	
+        
+
+        
+	    
+	    
+	    
+	    
+	    
         char be = BACKEND_A;
         if (bpf_ktime_get_ns() % 2)
             be = BACKEND_B;
