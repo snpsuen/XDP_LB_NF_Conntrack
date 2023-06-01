@@ -62,11 +62,11 @@ int xdp_load_balancer(struct xdp_md *ctx)
     key_five_tuple.protocol = iph->protocol;
     key_five_tuple.ip_source = iph->saddr;
     key_five_tuple.ip_destination = iph->saddr;
-    key_five_tuple.port_source = ports.src;
-    key_five_tuple.port_destination = ports.dst;
+    key_five_tuple.port_source = tcph->source;
+    key_five_tuple.port_destination = tcph->dest;
 	
     bpf_printk("Got TCP packet from %x", iph->saddr);
-    if (iph->saddr == IP_ADDRESS(CLIENT))
+    if (iph->saddr == IP_ADDRESS())
     {
         char be = BACKEND_A;
         if (bpf_ktime_get_ns() % 2)
