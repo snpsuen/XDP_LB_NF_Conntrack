@@ -1,3 +1,4 @@
+#include <linux/random.h>
 #include "xdp_lb_kern.h"
 
 #define IP_ADDRESS(x) (unsigned int)(172 + (17 << 8) + (0 << 16) + (x << 24))
@@ -38,6 +39,7 @@ int xdp_load_balancer(struct xdp_md *ctx)
     void *data_end = (void *)(long)ctx->data_end;
     struct five_tuple forward_key = {};
     __u16 return_key;
+    __u8 backend;
 
     bpf_printk("got something");
     struct ethhdr* eth = data;
@@ -83,39 +85,24 @@ int xdp_load_balancer(struct xdp_md *ctx)
 	    
 	__u8* forward_backend = bpf_map_lookup_elem(&forward_flow, &forward_key);
 	if (forward_backend == NULL) {
-	    
-	    bpf_map_update_elem(struct  bpf_map  *map,  const  void  *key, const void *value, u64
-       flags)
-	    
+	    backend = BACKEND_A;
+	    int random;
+	    get_random_bytes(&random, sizeof(random));
+	    if (random % 2)
+                backend = BACKEND_B;
+		
+	    bpf_map_update_elem(&forward_flow, &forward_key, &backend, BPF_ANY);
+	}
+	else
+	    backend = *forward_backend;
 	
-	    
+	iph->daddr = IP_ADDRESS(backend);
+	iph->saddr = IP_ADDRESS(LB);
+	iph->check = iph_csum(iph);
 	
-        
-
-        
-	    
-	    
-	    
-	    
-	    
-        char be = BACKEND_A;
-        if (bpf_ktime_get_ns() % 2)
-            be = BACKEND_B;
-
-        iph->daddr = IP_ADDRESS(be);
-        eth->h_dest[5] = be;
+	eth->h_dest[5] = backend;
+	return XDP_TX;
     }
-    else
-    {
-        iph->daddr = IP_ADDRESS(CLIENT);
-        eth->h_dest[5] = CLIENT;
-    }
-    iph->saddr = IP_ADDRESS(LB);
-    eth->h_source[5] = LB;
-
-    iph->check = iph_csum(iph);
-
-    return XDP_TX;
 }
 
 char _license[] SEC("license") = "GPL";
