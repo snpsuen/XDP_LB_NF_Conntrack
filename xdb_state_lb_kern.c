@@ -36,29 +36,34 @@ int xdp_load_balancer(struct xdp_md *ctx)
 {
     void *data = (void *)(long)ctx->data;
     void *data_end = (void *)(long)ctx->data_end;
+    struct five_tuple key_five_tuple = {};
 
     bpf_printk("got something");
-
-    struct ethhdr *eth = data;
-    if (data + sizeof(struct ethhdr) > data_end)
+    struct ethhdr* eth = data;
+    if ((void*)eth + sizeof(struct ethhdr) > data_end)
         return XDP_ABORTED;
 
     if (bpf_ntohs(eth->h_proto) != ETH_P_IP)
         return XDP_PASS;
 
-    struct iphdr *iph = data + sizeof(struct ethhdr);
-    if (data + sizeof(struct ethhdr) + sizeof(struct iphdr) > data_end)
+    struct iphdr* iph = eth + sizeof(struct ethhdr);
+    if ((void*)iph + sizeof(struct iphdr) > data_end)
         return XDP_ABORTED;
 
     if (iph->protocol != IPPROTO_TCP)
         return XDP_PASS;
+
+    bpf_printk("Got TCP packet from %x", iph->saddr);
+	
+    struct tcphdr* tcph = iph + sizeof(struct iphdr);
+    if ((void*)tcph + sizeof(struct tcphdr) > data_end)
+        return XDP_ABORTED;
     
-    struct five_tuple key_five_tuple = {};
     key_five_tuple.protocol = iph->protocol;
-    key_five_tuple.ip_source = srcip;
-	key_five_tuple.ip_destination = dstip;
-	key_five_tuple.port_source = ports.src;
-	key_five_tuple.port_destination = ports.dst;
+    key_five_tuple.ip_source = iph->saddr;
+    key_five_tuple.ip_destination = iph->saddr;
+    key_five_tuple.port_source = ports.src;
+    key_five_tuple.port_destination = ports.dst;
 	
     bpf_printk("Got TCP packet from %x", iph->saddr);
     if (iph->saddr == IP_ADDRESS(CLIENT))
