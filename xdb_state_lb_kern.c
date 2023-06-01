@@ -12,7 +12,7 @@ struct five_tuple {
   __u32 ip_source;
   __u32 ip_destination;
   __u16 port_source;
-	__u16 port_destination;
+  __u16 port_destination;
 };
 
 struct bpf_map_def SEC("maps") return_traffic = {
