@@ -92,6 +92,10 @@ int xdp_load_balancer(struct xdp_md *ctx)
                 backend = BACKEND_B;
 		
 	    bpf_map_update_elem(&forward_flow, &forward_key, &backend, BPF_ANY);
+		
+	    __u8 srcport = forward_key.port_source;
+	    __u32 srcaddr = forward_key.ip_source;
+	    bpf_map_update_elem(&return_traffic, &srcport, &srcaddr, BPF_ANY);	    
 	}
 	else
 	    backend = *forward_backend;
