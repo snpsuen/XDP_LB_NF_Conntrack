@@ -51,24 +51,24 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     if ((void*)iph + sizeof(struct iphdr) > data_end)
         return XDP_ABORTED;
 
-    if (iph->protocol != IPPROTO_TCP)
+    if (bpf_ntohs(iph->protocol) != IPPROTO_TCP)
         return XDP_PASS;
 	
     struct tcphdr* tcph = (void*)iph + sizeof(struct iphdr);
     if ((void*)tcph + sizeof(struct tcphdr) > data_end)
         return XDP_ABORTED;
 	
-    bpf_printk("Got TCP packet from %x", iph->saddr);
-    if ((iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B))) {
-        return_key = tcph->dest;
+    bpf_printk("Got TCP packet from %x", bpf_ntohl(iph->saddr));
+    if ((bpf_ntohl(iph->saddr) == IP_ADDRESS(BACKEND_A)) || (bpf_ntohl(iph->saddr) == IP_ADDRESS(BACKEND_B))) {
+        return_key = bpf_ntohs(tcph->dest);
 	__u32* return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
 	if (return_addr == NULL) {
 	    bpf_printk("Cannot locate a return path for the destination port %hu", return_key);
 	    return XDP_ABORTED;
 	}
 	
-	iph->daddr = *return_addr;
-	iph->saddr = IP_ADDRESS(LB);
+	iph->daddr = bpf_htonl(*return_addr);
+	iph->saddr = bpf_htonl(IP_ADDRESS(LB));
 	iph->check = iph_csum(iph);
         return XDP_PASS;
     }
