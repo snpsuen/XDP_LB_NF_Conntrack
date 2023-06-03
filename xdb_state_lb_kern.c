@@ -18,7 +18,7 @@ struct five_tuple {
 
 struct bpf_map_def SEC("maps") return_traffic = {
 	.type        = BPF_MAP_TYPE_HASH,
-	.key_size    = sizeof(__16),
+	.key_size    = sizeof(__u16),
 	.value_size  = sizeof(__u32),
 	.max_entries = 100000,
 	.map_flags   = BPF_F_NO_PREALLOC,
@@ -49,7 +49,7 @@ int xdp_load_balancer(struct xdp_md *ctx)
     if (bpf_ntohs(eth->h_proto) != ETH_P_IP)
         return XDP_PASS;
 
-    struct iphdr* iph = eth + sizeof(struct ethhdr);
+    struct iphdr* iph = (void*)eth + sizeof(struct ethhdr);
     if ((void*)iph + sizeof(struct iphdr) > data_end)
         return XDP_ABORTED;
 
@@ -58,7 +58,7 @@ int xdp_load_balancer(struct xdp_md *ctx)
 
     bpf_printk("Got TCP packet from %x", iph->saddr);
 	
-    struct tcphdr* tcph = iph + sizeof(struct iphdr);
+    struct tcphdr* tcph = (void*)iph + sizeof(struct iphdr);
     if ((void*)tcph + sizeof(struct tcphdr) > data_end)
         return XDP_ABORTED;
 	
