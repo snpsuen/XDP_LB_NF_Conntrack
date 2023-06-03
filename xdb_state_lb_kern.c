@@ -63,10 +63,10 @@ int xdp_load_balancer(struct xdp_md *ctx)
         return XDP_ABORTED;
 	
     bpf_printk("Got TCP packet from %x", iph->saddr);
-    if (iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B)) {
+    if ((iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B))) {
         return_key = tcph->dest;
 	__u32* return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
-	if (return_addr == NULL)
+	if (return_addr == NULL) {
 	    bpf_printk("Cannot locate a return path for the destination port %hu", return_key);
 	    return XDP_ABORTED;
 	}
