@@ -53,8 +53,6 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
 
     if (iph->protocol != IPPROTO_TCP)
         return XDP_PASS;
-
-    bpf_printk("Got TCP packet from %x", iph->saddr);
 	
     struct tcphdr* tcph = (void*)iph + sizeof(struct iphdr);
     if ((void*)tcph + sizeof(struct tcphdr) > data_end)
