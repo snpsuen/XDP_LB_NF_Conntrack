@@ -75,7 +75,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     else {
         forward_key.protocol = iph->protocol;
         forward_key.ip_source = iph->saddr;
-        forward_key.ip_destination = iph->saddr;
+        forward_key.ip_destination = iph->daddr;
         forward_key.port_source = tcph->source;
         forward_key.port_destination = tcph->dest;
 	    
