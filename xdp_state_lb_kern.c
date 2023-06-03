@@ -1,4 +1,3 @@
-#include <linux/random.h>
 #include "xdp_state_lb_kern.h"
 
 #define IP_ADDRESS(x) (unsigned int)(172 + (17 << 8) + (0 << 16) + (x << 24))
@@ -85,9 +84,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
 	__u8* forward_backend = bpf_map_lookup_elem(&forward_flow, &forward_key);
 	if (forward_backend == NULL) {
 	    backend = BACKEND_A;
-	    int random;
-	    get_random_bytes(&random, sizeof(random));
-	    if (random % 2)
+	    if (bpf_get_prandom_u32() % 2)
                 backend = BACKEND_B;
 		
 	    bpf_map_update_elem(&forward_flow, &forward_key, &backend, BPF_ANY);
