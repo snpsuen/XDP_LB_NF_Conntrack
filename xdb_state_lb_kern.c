@@ -33,8 +33,7 @@ struct bpf_map_def SEC("maps") forward_flow = {
 };
 
 SEC("xdp_state_lb")
-int xdp_load_balancer(struct xdp_md *ctx)
-{
+int xdp_state_load_balancer(struct xdp_md *ctx) {
     void *data = (void *)(long)ctx->data;
     void *data_end = (void *)(long)ctx->data_end;
     struct five_tuple forward_key = {};
