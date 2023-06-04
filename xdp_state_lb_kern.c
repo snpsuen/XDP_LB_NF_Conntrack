@@ -71,7 +71,8 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
             bpf_printk("Cannot locate a return path for the destination port %hu", return_key);
             return XDP_ABORTED;
         }
-
+        
+        bpf_printk("Packet returning to %x", *return_addr);
         iph->daddr = *return_addr;
         iph->saddr = IP_ADDRESS(LB);
         iph->check = iph_csum(iph);
@@ -81,8 +82,8 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         forward_key.protocol = iph->protocol;
         forward_key.ip_source = iph->saddr;
         forward_key.ip_destination = iph->daddr;
-        forward_key.port_source = tcph->source;
-        forward_key.port_destination = tcph->dest;
+        forward_key.port_source = bpf_ntohs(tcph->source);
+        forward_key.port_destination = bpf_ntohs(tcph->dest);
             
         __u8* forward_backend = bpf_map_lookup_elem(&forward_flow, &forward_key);
         if (forward_backend == NULL) {
