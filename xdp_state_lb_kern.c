@@ -37,6 +37,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     void *data_end = (void *)(long)ctx->data_end;
     struct five_tuple forward_key = {};
     __u16 return_key;
+    __u32* return_addr;
     __u8 backend;
 
     bpf_printk("got something");
@@ -63,7 +64,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         
         bpf_printk("Packet returning from the backend %x", iph->saddr);
         return_key = bpf_ntohs(tcph->dest);
-        __u32* return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
+        return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
         if (return_addr == NULL) {
             bpf_printk("Cannot locate a return path for the destination port %hu", return_key);
             return XDP_ABORTED;
