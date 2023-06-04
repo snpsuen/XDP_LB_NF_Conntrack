@@ -40,11 +40,6 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     __u8 backend;
 
     bpf_printk("got something");
-    bpf_printk("Backend-A IP address %x", IP_ADDRESS(BACKEND_A));
-    bpf_printk("Backend-B IP address %x", IP_ADDRESS(BACKEND_B));
-    bpf_printk("Client IP address %x", IP_ADDRESS(CLIENT));
-    bpf_printk("LB address %x", IP_ADDRESS(LB));
-  
     struct ethhdr* eth = data;
     if ((void*)eth + sizeof(struct ethhdr) > data_end)
         return XDP_ABORTED;
