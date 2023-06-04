@@ -63,7 +63,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     if ((void*)tcph + sizeof(struct tcphdr) > data_end)
         return XDP_ABORTED;
 
-    bpf_printk("Got TCP packet from %x", bpf_ntohl(iph->saddr));
+    bpf_printk("Got TCP packet from %x", iph->saddr);
     if ((iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B))) {
         return_key = tcph->dest;
         __u32* return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
