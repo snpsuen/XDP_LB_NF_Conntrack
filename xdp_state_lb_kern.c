@@ -65,20 +65,23 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
 
     bpf_printk("Got TCP packet from %x", iph->saddr);
     if ((iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B))) {
-        return_key = tcph->dest;
+        
+        bpf_printk("Packet returning from the backend %x", iph->saddr);
+        return_key = bpf_ntohs(tcph->dest);
         __u32* return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
         if (return_addr == NULL) {
             bpf_printk("Cannot locate a return path for the destination port %hu", return_key);
             return XDP_ABORTED;
         }
         
-        bpf_printk("Packet returning to %x", *return_addr);
+        bpf_printk("Located client %x from an existing entry in the return traffic table", *return_addr);
         iph->daddr = *return_addr;
         iph->saddr = IP_ADDRESS(LB);
         iph->check = iph_csum(iph);
         return XDP_PASS;
     }
     else {
+        bpf_printk("Packet sent from the client %x", iph->saddr);
         forward_key.protocol = iph->protocol;
         forward_key.ip_source = iph->saddr;
         forward_key.ip_destination = iph->daddr;
@@ -90,16 +93,21 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
             backend = BACKEND_A;
             if (bpf_get_prandom_u32() % 2)
                 backend = BACKEND_B;
-
+            
+            bpf_printk("Add a new entry to the forward flow table for backend %x", IP_ADDRESS(backend));
             bpf_map_update_elem(&forward_flow, &forward_key, &backend, BPF_ANY);
 
             __u8 srcport = forward_key.port_source;
             __u32 srcaddr = forward_key.ip_source;
+            bpf_printk("Add a new entry to the return traffic table to map client port %x to client address %x", src_port, srcaddr);
             bpf_map_update_elem(&return_traffic, &srcport, &srcaddr, BPF_ANY);      
         }
-        else
+        else {
+            bpf_printk("Located backend %x from an existing entry in the forward flow table ", IP_ADDRESS(*forward_backend));
             backend = *forward_backend;
-
+        }
+        
+        bpf_printk("Packet to be forwrded to backend %x", IP_ADDRESS(backend));
         iph->daddr = IP_ADDRESS(backend);
         iph->saddr = IP_ADDRESS(LB);
         iph->check = iph_csum(iph);
