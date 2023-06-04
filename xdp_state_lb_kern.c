@@ -8,27 +8,27 @@
 #define LB 5
 
 struct five_tuple {
-  __u8  protocol;
-  __u32 ip_source;
-  __u32 ip_destination;
-  __u16 port_source;
-  __u16 port_destination;
+    __u8  protocol;
+    __u32 ip_source;
+    __u32 ip_destination;
+    __u16 port_source;
+    __u16 port_destination;
 };
 
 struct bpf_map_def SEC("maps") return_traffic = {
-        .type        = BPF_MAP_TYPE_HASH,
-        .key_size    = sizeof(__u16),
-        .value_size  = sizeof(__u32),
-        .max_entries = 100000,
-        .map_flags   = BPF_F_NO_PREALLOC,
+    .type        = BPF_MAP_TYPE_HASH,
+    .key_size    = sizeof(__u16),
+    .value_size  = sizeof(__u32),
+    .max_entries = 100000,
+    .map_flags   = BPF_F_NO_PREALLOC,
 };
 
 struct bpf_map_def SEC("maps") forward_flow = {
-        .type        = BPF_MAP_TYPE_HASH,
-        .key_size    = sizeof(struct five_tuple),
-        .value_size  = sizeof(__u8),
-        .max_entries = 100000,
-        .map_flags   = BPF_F_NO_PREALLOC,
+    .type        = BPF_MAP_TYPE_HASH,
+    .key_size    = sizeof(struct five_tuple),
+    .value_size  = sizeof(__u8),
+    .max_entries = 100000,
+    .map_flags   = BPF_F_NO_PREALLOC,
 };
 
 SEC("xdp_state_lb")
@@ -40,6 +40,11 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     __u8 backend;
 
     bpf_printk("got something");
+    bpf_printk("Backend-A IP address %x", IP_ADDRESS(BACKEND_A));
+    bpf_printk("Backend-B IP address %x", IP_ADDRESS(BACKEND_B));
+    bpf_printk("Client IP address %x", IP_ADDRESS(CLIENT));
+    bpf_printk("LB address %x", IP_ADDRESS(LB));
+  
     struct ethhdr* eth = data;
     if ((void*)eth + sizeof(struct ethhdr) > data_end)
         return XDP_ABORTED;
