@@ -99,7 +99,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
 
             __u8 srcport = forward_key.port_source;
             __u32 srcaddr = forward_key.ip_source;
-            bpf_printk("Add a new entry to the return traffic table to map client port %x to client address %x", src_port, srcaddr);
+            bpf_printk("Add a new entry to the return traffic table to map client port %x to client address %x", srcport, srcaddr);
             bpf_map_update_elem(&return_traffic, &srcport, &srcaddr, BPF_ANY);      
         }
         else {
