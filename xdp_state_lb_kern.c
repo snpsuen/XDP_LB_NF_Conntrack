@@ -61,10 +61,13 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
 
     bpf_printk("Got TCP packet from %x", iph->saddr);
     if ((iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B))) {
-        
         bpf_printk("Packet returning from the backend %x", iph->saddr);
         return_key = bpf_ntohs(tcph->dest);
+        
+        bpf_printk("Using return key %x to look up the return traffic table", return_key);
         return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
+        bpf_printk("Got return_addr from the return traffic table ...");
+        
         if (return_addr == NULL) {
             bpf_printk("Cannot locate a return path for the destination port %hu", return_key);
             return XDP_ABORTED;
