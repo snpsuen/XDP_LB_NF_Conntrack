@@ -40,7 +40,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     __u16 return_key;
     __u32* return_addr;
     __u8 backend;
-    __u8 srcport;
+    __u16 srcport;
     __u32 srcaddr;
 
     bpf_printk("got something");
@@ -65,11 +65,11 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     bpf_printk("Got TCP packet from %x", iph->saddr);
     if ((iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B))) {
         bpf_printk("Packet returning from the backend %x", iph->saddr);
-        bpf_printk("Packet with tcp source port %d", tcph->source);
-        bpf_printk("Packet with tcp destination port %d", tcph->dest);
+        bpf_printk("Packet with tcp source port %d", bpf_ntohs(tcph->source));
+        bpf_printk("Packet with tcp destination port %d", bpf_ntohs(tcph->dest));
         
-        return_key = tcph->dest;
-        bpf_printk("Using return key %x to look up the return traffic table", return_key);
+        return_key = bpf_ntohs(tcph->dest);
+        bpf_printk("Using return key %d to look up the return traffic table", return_key);
         return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
         bpf_printk("Trying to locate return_addr from the return traffic table ...");
         
@@ -86,14 +86,14 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     }
     else {
         bpf_printk("Packet sent from the client %x", iph->saddr);
-        bpf_printk("Packet with tcp source port %d", tcph->source);
-        bpf_printk("Packet with tcp destination port %d", tcph->dest);
+        bpf_printk("Packet with tcp source port %d", bpf_ntohs(tcph->source));
+        bpf_printk("Packet with tcp destination port %d", bpf_ntohs(tcph->dest));
         
         forward_key.protocol = iph->protocol;
         forward_key.ip_source = iph->saddr;
         forward_key.ip_destination = iph->daddr;
-        forward_key.port_source = tcph->source;
-        forward_key.port_destination = tcph->dest;
+        forward_key.port_source = bpf_ntohs(tcph->source);
+        forward_key.port_destination = bpf_ntohs(tcph->dest);
             
         forward_backend = bpf_map_lookup_elem(&forward_flow, &forward_key);
         if (forward_backend == NULL) {
@@ -106,7 +106,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
 
             srcport = forward_key.port_source;
             srcaddr = forward_key.ip_source;
-            bpf_printk("Add a new entry to the return traffic table to map client port %x to client address %x", srcport, srcaddr);
+            bpf_printk("Add a new entry to the return traffic table to map client port %d to client address %x", srcport, srcaddr);
             bpf_map_update_elem(&return_traffic, &srcport, &srcaddr, BPF_ANY);      
         }
         else {
