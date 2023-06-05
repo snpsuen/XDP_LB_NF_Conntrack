@@ -66,11 +66,11 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         
         bpf_printk("Using return key %x to look up the return traffic table", return_key);
         return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
-        bpf_printk("Got return_addr from the return traffic table ...");
+        bpf_printk("Trying to locate return_addr from the return traffic table ...");
         
         if (return_addr == NULL) {
             bpf_printk("Cannot locate a return path for the destination port %hu", return_key);
-            return XDP_ABORTED;
+            return XDP_DROP;
         }
         
         bpf_printk("Located client %x from an existing entry in the return traffic table", *return_addr);
