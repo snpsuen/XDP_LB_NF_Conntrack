@@ -65,8 +65,10 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     bpf_printk("Got TCP packet from %x", iph->saddr);
     if ((iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B))) {
         bpf_printk("Packet returning from the backend %x", iph->saddr);
-        return_key = tcph->dest;
+        bpf_printk("Packet with tcp source port %d", tcph->source);
+        bpf_printk("Packet with tcp destination port %d", tcph->dest);
         
+        return_key = tcph->dest;
         bpf_printk("Using return key %x to look up the return traffic table", return_key);
         return_addr = bpf_map_lookup_elem(&return_traffic, &return_key);
         bpf_printk("Trying to locate return_addr from the return traffic table ...");
@@ -84,6 +86,9 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     }
     else {
         bpf_printk("Packet sent from the client %x", iph->saddr);
+        bpf_printk("Packet with tcp source port %d", tcph->source);
+        bpf_printk("Packet with tcp destination port %d", tcph->dest);
+        
         forward_key.protocol = iph->protocol;
         forward_key.ip_source = iph->saddr;
         forward_key.ip_destination = iph->daddr;
