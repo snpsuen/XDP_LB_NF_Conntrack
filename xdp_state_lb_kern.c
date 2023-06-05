@@ -36,7 +36,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     void *data = (void *)(long)ctx->data;
     void *data_end = (void *)(long)ctx->data_end;
     struct five_tuple forward_key = {};
-    __u8* forward_backend
+    __u8* forward_backend;
     __u16 return_key;
     __u32* return_addr;
     __u8 backend;
