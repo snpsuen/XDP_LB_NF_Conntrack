@@ -69,7 +69,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         bpf_printk("Trying to locate return_addr from the return traffic table ...");
         
         if (return_addr == NULL) {
-            bpf_printk("Cannot locate a return path for the destination port %hu", return_key);
+            bpf_printk("Cannot locate a return path for the destination port %x", return_key);
             return XDP_DROP;
         }
         
