@@ -83,7 +83,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         iph->saddr = IP_ADDRESS(LB);
         iph->check = iph_csum(iph);
         
-        return XDP_PASS;
+        return XDP_REDIRECT;
     }
     else {
         bpf_printk("Packet sent from the client %x", iph->saddr);
