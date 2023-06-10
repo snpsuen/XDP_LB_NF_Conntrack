@@ -42,6 +42,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     __u8 backend;
     __u16 srcport;
     __u32 srcaddr;
+    struct bpf_fib_lookup fib_params = {};
 
     bpf_printk("got something");
     struct ethhdr* eth = data;
