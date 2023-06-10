@@ -99,9 +99,12 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         
         switch(rc) {
         case BPF_FIB_LKUP_RET_SUCCESS:
-            _decr_ttl(ether_proto, l3hdr);
+            bpf_printk("Found fib_params.dmac %s", fib_params.dmac);
+            bpf_printk("Found fib_params.smac %s", fib_params.smac);
+            _decr_ttl(bpf_ntohs(eth->h_proto), iph);
             __builtin_memcpy(eth->h_dest, fib_params.dmac, ETH_ALEN);
             __builtin_memcpy(eth->h_source, fib_params.smac, ETH_ALEN);
+            bpf_printk("Calling fib_params_redirect ...);
             return bpf_redirect(fib_params.ifindex, 0);
             
         case BPF_FIB_LKUP_RET_BLACKHOLE:
