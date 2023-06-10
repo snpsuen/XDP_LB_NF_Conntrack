@@ -95,7 +95,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         fib_params.ifindex = ctx->ingress_ifindex;
         
         rc = bpf_fib_lookup(ctx, &fib_params, sizeof(fib_params), 0);
-        bpf_printk("Looked up relevant information in the FIB table", *return_addr);
+        bpf_printk("Looked up relevant information in the FIB table with rc %d", rc);
         
         switch(rc) {
         case BPF_FIB_LKUP_RET_SUCCESS:
@@ -103,22 +103,20 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
             __builtin_memcpy(eth->h_dest, fib_params.dmac, ETH_ALEN);
             __builtin_memcpy(eth->h_source, fib_params.smac, ETH_ALEN);
             return bpf_redirect(fib_params.ifindex, 0);
+            
         case BPF_FIB_LKUP_RET_BLACKHOLE:
         case BPF_FIB_LKUP_RET_UNREACHABLE:
         case BPF_FIB_LKUP_RET_PROHIBIT:
             return XDP_DROP;
+        
         case BPF_FIB_LKUP_RET_NOT_FWDED:
         case BPF_FIB_LKUP_RET_FWD_DISABLED:
         case BPF_FIB_LKUP_RET_UNSUPP_LWT:
         case BPF_FIB_LKUP_RET_NO_NEIGH:
         case BPF_FIB_LKUP_RET_FRAG_NEEDED:
-            return XDP_PASS;
-    }
-        
-        
-        iph->check = iph_csum(iph);
-        
-        return XDP_PASS;
+        default:
+          return XDP_PASS;
+        }  
     }
     else {
         bpf_printk("Packet sent from the client %x", iph->saddr);
