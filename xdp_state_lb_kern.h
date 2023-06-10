@@ -27,3 +27,15 @@ iph_csum(struct iphdr *iph)
     unsigned long long csum = bpf_csum_diff(0, 0, (unsigned int *)iph, sizeof(struct iphdr), 0);
     return csum_fold_helper(csum);
 }
+
+static __always_inline void _decr_ttl(__u16 proto, void *h) {
+    if (proto == ETH_P_IP) {
+        struct iphdr *ip = h;
+        __u32 c = ip->check;
+        c += bpf_htons(0x0100);
+        ip->check = (__u16)(c + (c >= 0xffff));
+        --ip->ttl;
+    } 
+    else if (proto == ETH_P_IPV6) 
+        --((struct ipv6hdr*) h)->hop_limit;
+}
