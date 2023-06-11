@@ -101,7 +101,8 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         case BPF_FIB_LKUP_RET_SUCCESS:
             bpf_printk("Found fib_params.dmac %x:%x:%x", fib_params.dmac[3],ib_params.dmac[4],ib_params.dmac[5]);
             bpf_printk("Found fib_params.smac %x:%x:%x", fib_params.smac[3],ib_params.smac[4],ib_params.smac[5]);
-            _decr_ttl(bpf_ntohs(eth->h_proto), iph);
+                
+            ip_decrease_ttl(iph);
             __builtin_memcpy(eth->h_dest, fib_params.dmac, ETH_ALEN);
             __builtin_memcpy(eth->h_source, fib_params.smac, ETH_ALEN);
             /* bpf_printk("Calling fib_params_redirect ...");
