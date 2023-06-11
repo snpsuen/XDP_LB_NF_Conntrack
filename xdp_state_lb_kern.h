@@ -42,3 +42,11 @@ static __always_inline void _decr_ttl(__u16 proto, void *h) {
     else if (proto == ETH_P_IPV6) 
         --((struct ipv6hdr*) h)->hop_limit;
 }
+
+static __always_inline int ip_decrease_ttl(struct iphdr *iph)
+{
+	__u32 check = iph->check;
+	check += bpf_htons(0x0100);
+	iph->check = (__u16)(check + (check >= 0xFFFF));
+	return --iph->ttl;
+}
