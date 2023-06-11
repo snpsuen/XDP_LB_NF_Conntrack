@@ -6,6 +6,7 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 #include <linux/ipv6.h>
+#include <linux/string.h>
 #include <sys/socket.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h>
