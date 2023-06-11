@@ -104,7 +104,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
             _decr_ttl(bpf_ntohs(eth->h_proto), iph);
             __builtin_memcpy(eth->h_dest, fib_params.dmac, ETH_ALEN);
             __builtin_memcpy(eth->h_source, fib_params.smac, ETH_ALEN);
-            bpf_printk("Calling fib_params_redirect ...);
+            bpf_printk("Calling fib_params_redirect ...");
             return bpf_redirect(fib_params.ifindex, 0);
             
         case BPF_FIB_LKUP_RET_BLACKHOLE:
