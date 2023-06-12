@@ -99,15 +99,17 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         
         switch(rc) {
         case BPF_FIB_LKUP_RET_SUCCESS:
-            bpf_printk("Found fib_params.dmac %x:%x:%x", fib_params.dmac[3], fib_params.dmac[4], fib_params.dmac[5]);
-            bpf_printk("Found fib_params.smac %x:%x:%x", fib_params.smac[3], fib_params.smac[4], fib_params.smac[5]);
+            bpf_printk("Found fib_params.dmac = %x:%x:%x", fib_params.dmac[3], fib_params.dmac[4], fib_params.dmac[5]);
+            bpf_printk("Found fib_params.smac = %x:%x:%x", fib_params.smac[3], fib_params.smac[4], fib_params.smac[5]);
                 
             ip_decrease_ttl(iph);
             memcpy(eth->h_dest, fib_params.dmac, ETH_ALEN);
             memcpy(eth->h_source, fib_params.smac, ETH_ALEN);
             /* bpf_printk("Calling fib_params_redirect ...");
             return bpf_redirect(fib_params.ifindex, 0); */
-                
+            
+            bpf_printk("eth->h_dest[5] = %x", eth->h_dest[5]);
+            bpf_printk("eth->source[5] = %x", eth->h_source[5]);
             bpf_printk("Returning action XDP_TX ...");
             return XDP_TX;
             
