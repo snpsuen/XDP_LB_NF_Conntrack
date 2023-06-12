@@ -33,8 +33,8 @@ int xdp_load_balancer(struct xdp_md *ctx)
     if ((void*)tcph + sizeof(struct tcphdr) > data_end)
         return XDP_ABORTED;
 
-    bpf_printk("Got TCP packet travelling from %x:%d to %x:%d", iph->saddr, bpf_ntohs(tcph->source), iph->daddr, bpf_ntohs(tcph->dest));
-    
+    bpf_printk("Got TCP packet travelling from port %d to %d", bpf_ntohs(tcph->source), bpf_ntohs(tcph->dest));
+    bpf_printk("Got TCP packet travelling from IP %x to %x", iph->saddr, iph->daddr);
     if (iph->saddr == IP_ADDRESS(CLIENT))
     {
         char be = BACKEND_A;
@@ -54,8 +54,8 @@ int xdp_load_balancer(struct xdp_md *ctx)
 
     iph->check = iph_csum(iph);
     
-    bpf_printk("Before XDP_TX, iph->saddr = %x, iph->daddr = %x", iph->saddr, iph->saddr);
-    bpf_printk("Before XDP_TX, eth->h_source[5] = %x, eth->dest[5] = %x", eth->h_source[5], eth->dest[5]);
+    bpf_printk("Before XDP_TX, iph->saddr = %x, iph->daddr = %x", iph->saddr, iph->daddr);
+    bpf_printk("Before XDP_TX, eth->h_source[5] = %x, eth->h_dest[5] = %x", eth->h_source[5], eth->h_dest[5]);
     bpf_printk("Returning XDP_TX ...");
     return XDP_TX;
 }
