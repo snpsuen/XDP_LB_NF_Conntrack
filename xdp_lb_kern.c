@@ -49,7 +49,10 @@ int xdp_load_balancer(struct xdp_md *ctx)
     eth->h_source[5] = LB;
 
     iph->check = iph_csum(iph);
-
+    
+    bpf_printk("Before XDP_TX, iph->saddr = %x, iph->daddr = %x", iph->saddr, iph->saddr);
+    bpf_printk("Before XDP_TX, eth->h_source[5] = %x, eth->dest[5] = %x", eth->h_source[5], eth->dest[5]);
+    bpf_printk("Returning XDP_TX ...");
     return XDP_TX;
 }
 
