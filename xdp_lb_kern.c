@@ -29,7 +29,7 @@ int xdp_load_balancer(struct xdp_md *ctx)
     if (iph->protocol != IPPROTO_TCP)
         return XDP_PASS;
 
-    bpf_printk("Got TCP packet from %x", iph->saddr);
+    bpf_printk("Got TCP packet from %x:%d to %x:%d", iph->saddr, iph->saddr);
 
     if (iph->saddr == IP_ADDRESS(CLIENT))
     {
