@@ -33,8 +33,8 @@ int xdp_load_balancer(struct xdp_md *ctx)
     if ((void*)tcph + sizeof(struct tcphdr) > data_end)
         return XDP_ABORTED;
 
-    bpf_printk("Got TCP packet from %x:%d to %x:%d", iph->saddr, tcph->saddr);
-
+    bpf_printk("Got TCP packet travelling from %x:%d to %x:%d", iph->saddr, bpf_ntohs(tcph->source), iph->daddr, bpf_ntohs(tcph->dest));
+    
     if (iph->saddr == IP_ADDRESS(CLIENT))
     {
         char be = BACKEND_A;
