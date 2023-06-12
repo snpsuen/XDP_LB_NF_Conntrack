@@ -109,7 +109,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
             return bpf_redirect(fib_params.ifindex, 0); */
             
             bpf_printk("Before XDP_TX, iph->saddr = %x, iph->daddr = %x", iph->saddr, iph->saddr);
-            bpf_printk("Before XDP_TX, eth->h_source[5] = %x, eth->dest[5] = %x", eth->h_source[5], eth->dest[5]);
+            bpf_printk("Before XDP_TX, eth->h_source[5] = %x, eth->h_dest[5] = %x", eth->h_source[5], eth->h_dest[5]);
             bpf_printk("Returning XDP_TX ...");
             return XDP_TX;
             
