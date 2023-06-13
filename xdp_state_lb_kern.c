@@ -64,7 +64,8 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
     if ((void*)tcph + sizeof(struct tcphdr) > data_end)
         return XDP_ABORTED;
 
-    bpf_printk("Got TCP packet from %x", iph->saddr);
+    bpf_printk("Got TCP packet travelling from port %d to %d", bpf_ntohs(tcph->source), bpf_ntohs(tcph->dest));
+    bpf_printk("Got TCP packet travelling from IP %x to %x", iph->saddr, iph->daddr);
     if ((iph->saddr == IP_ADDRESS(BACKEND_A)) || (iph->saddr == IP_ADDRESS(BACKEND_B))) {
         bpf_printk("Packet returning from the backend %x", iph->saddr);
         bpf_printk("Packet with tcp source port %d", bpf_ntohs(tcph->source));
@@ -102,9 +103,10 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
             bpf_printk("Found fib_params.dmac = %x:%x:%x", fib_params.dmac[3], fib_params.dmac[4], fib_params.dmac[5]);
             bpf_printk("Found fib_params.smac = %x:%x:%x", fib_params.smac[3], fib_params.smac[4], fib_params.smac[5]);
                 
-            ip_decrease_ttl(iph);
+            /* ip_decrease_ttl(iph); */
             memcpy(eth->h_dest, fib_params.dmac, ETH_ALEN);
             memcpy(eth->h_source, fib_params.smac, ETH_ALEN);
+            
             /* bpf_printk("Calling fib_params_redirect ...");
             return bpf_redirect(fib_params.ifindex, 0); */
             
