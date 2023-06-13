@@ -163,8 +163,9 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         bpf_printk("Packet to be forwrded to backend %x", IP_ADDRESS(backend));
         iph->daddr = IP_ADDRESS(backend);
         iph->saddr = IP_ADDRESS(LB);
+        
         eth->h_dest[5] = backend;
-        eth->h_dest[5] = backend;
+        eth->h_source[5] = LB;
         iph->check = iph_csum(iph);
         
         bpf_printk("Before XDP_TX, iph->saddr = %x, iph->daddr = %x", iph->saddr, iph->daddr);
