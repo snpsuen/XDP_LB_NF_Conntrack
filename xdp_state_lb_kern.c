@@ -106,6 +106,7 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
             /* ip_decrease_ttl(iph); */
             memcpy(eth->h_dest, fib_params.dmac, ETH_ALEN);
             memcpy(eth->h_source, fib_params.smac, ETH_ALEN);
+            iph->check = iph_csum(iph);
             
             /* bpf_printk("Calling fib_params_redirect ...");
             return bpf_redirect(fib_params.ifindex, 0); */
@@ -162,9 +163,13 @@ int xdp_state_load_balancer(struct xdp_md *ctx) {
         bpf_printk("Packet to be forwrded to backend %x", IP_ADDRESS(backend));
         iph->daddr = IP_ADDRESS(backend);
         iph->saddr = IP_ADDRESS(LB);
-        iph->check = iph_csum(iph);
-
         eth->h_dest[5] = backend;
+        eth->h_dest[5] = backend;
+        iph->check = iph_csum(iph);
+        
+        bpf_printk("Before XDP_TX, iph->saddr = %x, iph->daddr = %x", iph->saddr, iph->daddr);
+        bpf_printk("Before XDP_TX, eth->h_source[5] = %x, eth->h_dest[5] = %x", eth->h_source[5], eth->h_dest[5]);
+        bpf_printk("Returning XDP_TX ...");
         return XDP_TX;
     }
 }
